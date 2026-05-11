@@ -1,5 +1,5 @@
 export const site = {
-  url: 'https://www.pizzarustica.fr',
+  url: 'https://pizzarustica.fr',
   name: 'Pizza Rustica',
   legalName: 'GRANO', // TODO: confirmer raison sociale exacte + SIREN
   founded: 2007,
@@ -36,8 +36,7 @@ export const social = {
   tripadvisor:
     'https://www.tripadvisor.com/Restaurant_Review-g187147-d5955044-Reviews-Pizza_Rustica-Paris_Ile_de_France.html',
   yelp: 'https://www.yelp.com/biz/pizza-rustica-paris-4',
-  // TODO: remplacer par la vraie URL boutique
-  ubereats: 'https://www.ubereats.com',
+  ubereats: 'https://www.ubereats.com/fr/store/pizza-rustica/7NGRRGh_VJyDJhbqbACXQQ',
   // TODO: ajouter Deliveroo / TheFork / Just Eat si applicable
 };
 
