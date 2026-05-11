@@ -142,7 +142,10 @@ jobs:
 
           deleted=0
           for NAME in "$ZONE_NAME" "www.$ZONE_NAME"; do
-            for TYPE in A AAAA CNAME; do
+            # Include NS so we kill any sub-delegation (e.g. www delegated to sedoparking).
+            # Skip NS on the zone apex — that's the zone's own delegation.
+            for TYPE in A AAAA CNAME NS; do
+              if [ "$TYPE" = "NS" ] && [ "$NAME" = "$ZONE_NAME" ]; then continue; fi
               ids=$(curl -sS "${AUTH[@]}" "$BASE/zones/$zone_id/dns_records?name=$NAME&type=$TYPE" \
                 | jq -r '.result[] | select((.content // "") | endswith(".pages.dev") | not) | .id')
               for rid in $ids; do
@@ -185,10 +188,20 @@ jobs:
             echo "✓ $domain attached."
           }
 
+          ZONE_BASE="https://api.cloudflare.com/client/v4"
+          ZONE_ID=$(curl -sS "${AUTH[@]}" "$ZONE_BASE/zones?name=pizzarustica.fr" | jq -r '.result[0].id // empty')
+
           for DOMAIN in www.pizzarustica.fr pizzarustica.fr; do
             info_code=$(curl -sS -o /tmp/info.json -w "%{http_code}" "${AUTH[@]}" "$API/$DOMAIN")
             status=$(jq -r '.result.status // "missing"' /tmp/info.json 2>/dev/null || echo "missing")
-            echo "Domain $DOMAIN: HTTP $info_code, status=$status"
+
+            # Even if Pages thinks the domain is active, verify a routing DNS record exists.
+            records_in_zone=0
+            if [ -n "$ZONE_ID" ]; then
+              records_in_zone=$(curl -sS "${AUTH[@]}" "$ZONE_BASE/zones/$ZONE_ID/dns_records?name=$DOMAIN" \
+                | jq '[.result[]? | select(.type | test("^(A|AAAA|CNAME)$"))] | length')
+            fi
+            echo "Domain $DOMAIN: HTTP $info_code, status=$status, A/AAAA/CNAME records in zone=$records_in_zone"
 
             if [ "$info_code" = "404" ] || [ "$status" = "missing" ]; then
               echo "→ Attaching fresh…"
@@ -196,12 +209,12 @@ jobs:
               continue
             fi
 
-            if [ "$status" = "active" ]; then
-              echo "✓ $DOMAIN already active."
+            if [ "$status" = "active" ] && [ "$records_in_zone" -gt 0 ]; then
+              echo "✓ $DOMAIN already active with routing records present."
               continue
             fi
 
-            echo "→ Status '$status' — detaching and re-attaching…"
+            echo "→ Re-attaching ($DOMAIN status=$status, records=$records_in_zone)…"
             del_code=$(curl -sS -o /tmp/del.json -w "%{http_code}" -X DELETE "${AUTH[@]}" "$API/$DOMAIN")
             if [ "$del_code" != "200" ]; then
               echo "✗ Detach failed (HTTP $del_code):"
