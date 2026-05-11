@@ -1,0 +1,56 @@
+---
+import type { Pizza } from '@/data/menu';
+
+interface Props {
+  pizza: Pizza;
+}
+const { pizza } = Astro.props;
+
+const tagLabels: Record<string, { label: string; cls: string }> = {
+  bestseller: { label: '★ Bestseller', cls: 'bg-amber-500 text-stone-950' },
+  spicy: { label: '🌶 Piquant', cls: 'bg-red-600 text-white' },
+  vegan: { label: 'Vegan', cls: 'bg-emerald-600 text-white' },
+  nouveau: { label: 'Nouveau', cls: 'bg-blue-600 text-white' },
+};
+const tag = pizza.tag ? tagLabels[pizza.tag] : null;
+---
+
+<article
+  class="group relative bg-stone-900/60 border border-stone-800 rounded-2xl overflow-hidden
+         hover:border-amber-500/50 transition-all duration-200 active:scale-[0.99]"
+  data-category={pizza.category}
+  data-plausible-event-name="pizza_card_click"
+  data-plausible-event-pizza={pizza.id}>
+  <div class="aspect-square bg-stone-800 relative overflow-hidden">
+    <!-- TODO: déposer /img/pizzas/{id}.webp pour chaque pizza ; fallback vers placeholder -->
+    <img
+      src={`/img/pizzas/${pizza.id}.webp`}
+      alt={`Pizza ${pizza.name} — ${pizza.tagline}`}
+      class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+      loading="lazy"
+      decoding="async"
+      width="400"
+      height="400"
+      onerror="if(this.dataset.fallback!=='1'){this.dataset.fallback='1';this.src='/img/pizzas/_placeholder.svg';}"
+    />
+    {tag && (
+      <span class={`absolute top-3 left-3 ${tag.cls} text-xs font-bold px-3 py-1 rounded-full`}>
+        {tag.label}
+      </span>
+    )}
+  </div>
+  <div class="p-5">
+    <div class="flex items-baseline justify-between gap-2 mb-2">
+      <h3 class="text-white font-bold text-xl font-display">{pizza.name}</h3>
+      {pizza.price !== undefined && (
+        <span class="text-amber-400 font-bold text-lg whitespace-nowrap">
+          {pizza.price}&nbsp;€
+        </span>
+      )}
+    </div>
+    <p class="text-stone-400 text-sm mb-3 italic">{pizza.tagline}</p>
+    <p class="text-stone-500 text-xs">
+      {pizza.ingredients.join(' · ')}
+    </p>
+  </div>
+</article>

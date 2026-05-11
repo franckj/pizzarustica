@@ -1,0 +1,79 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    @apply bg-stone-950 text-stone-100 font-sans antialiased;
+    font-size: 16px; /* >= 16px évite le zoom auto iOS sur les inputs */
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Accessibilité : focus visible cohérent */
+  :focus-visible {
+    @apply outline-none ring-2 ring-amber-400 ring-offset-2 ring-offset-stone-950 rounded;
+  }
+
+  /* Padding bottom global pour ne pas être caché par le CTA sticky mobile */
+  main {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  @media (max-width: 767px) {
+    body {
+      padding-bottom: 80px; /* hauteur du CTA sticky */
+    }
+  }
+
+  /* Réduction des animations pour utilisateurs sensibles */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer components {
+  .container-page {
+    @apply mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 bg-amber-500 text-stone-950 font-bold
+           px-6 py-3.5 rounded-xl text-base
+           hover:bg-amber-400 active:scale-95 transition-all duration-150;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 bg-stone-800 text-stone-100 font-semibold
+           px-6 py-3.5 rounded-xl text-base border border-stone-700
+           hover:bg-stone-700 active:scale-95 transition-all duration-150;
+  }
+
+  .section {
+    @apply py-16 sm:py-20;
+  }
+
+  .h-section {
+    @apply text-3xl sm:text-4xl font-black text-white font-display tracking-tight;
+  }
+}
+
+/* Safe area iPhone */
+.safe-area-inset-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}

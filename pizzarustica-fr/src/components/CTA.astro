@@ -1,0 +1,27 @@
+---
+import { nap, social } from '@/data/config';
+---
+
+<div
+  class="fixed bottom-0 left-0 right-0 z-40 md:hidden
+         bg-stone-950/95 backdrop-blur-sm border-t border-stone-800
+         safe-area-inset-bottom px-4 py-3 flex gap-3"
+  role="region"
+  aria-label="Commander">
+  <a
+    href={`tel:${nap.phone}`}
+    class="flex-1 flex items-center justify-center gap-2
+           bg-amber-500 text-stone-950 font-bold py-3.5 rounded-xl active:scale-95 transition-transform"
+    data-plausible-event-name="click_cta_appeler_sticky">
+    📞 Appeler
+  </a>
+  <a
+    href={social.ubereats}
+    target="_blank"
+    rel="noopener"
+    class="flex-1 flex items-center justify-center gap-2
+           bg-stone-800 text-stone-100 font-bold py-3.5 rounded-xl active:scale-95 transition-transform border border-stone-700"
+    data-plausible-event-name="click_cta_ubereats_sticky">
+    🛵 Commander
+  </a>
+</div>

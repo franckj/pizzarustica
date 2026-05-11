@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 60" role="img" aria-label="Pizza Rustica">
+  <g>
+    <circle cx="22" cy="30" r="18" fill="#f59e0b"/>
+    <circle cx="22" cy="30" r="13" fill="#dc2626"/>
+    <circle cx="17" cy="26" r="2" fill="#fef3c7"/>
+    <circle cx="27" cy="24" r="1.6" fill="#fef3c7"/>
+    <circle cx="26" cy="33" r="2" fill="#fef3c7"/>
+    <circle cx="18" cy="33" r="1.4" fill="#84cc16"/>
+  </g>
+  <text x="48" y="28" font-family="Georgia, serif" font-weight="900" font-size="20" fill="#fafaf9">PIZZA</text>
+  <text x="48" y="48" font-family="Georgia, serif" font-style="italic" font-weight="700" font-size="18" fill="#f59e0b">Rustica</text>
+</svg>

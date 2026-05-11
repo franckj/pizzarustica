@@ -1,0 +1,98 @@
+---
+import Base from '@/layouts/Base.astro';
+import Header from '@/components/Header.astro';
+import Footer from '@/components/Footer.astro';
+import { nap, site } from '@/data/config';
+
+const title = `Politique de confidentialité – ${site.name}`;
+const description = "Politique de confidentialité du site pizzarustica.fr — collecte de données, mesure d'audience Plausible, droits RGPD.";
+---
+
+<Base title={title} description={description} canonical={`${site.url}/politique-confidentialite`} noindex>
+  <Header />
+  <main id="main" class="pt-24">
+    <article class="section">
+      <div class="container-page max-w-3xl prose prose-invert prose-stone">
+        <h1 class="text-4xl font-black font-display text-white mb-8">Politique de confidentialité</h1>
+
+        <p>
+          Cette politique décrit la manière dont <strong>{site.name}</strong> collecte et traite
+          les données personnelles via le site <strong>pizzarustica.fr</strong>.
+        </p>
+
+        <h2>1. Données collectées</h2>
+        <p>
+          Ce site est <strong>statique</strong> et ne demande aucune création de compte. Aucune
+          donnée personnelle n'est collectée directement par le site. Lorsque vous nous contactez par
+          téléphone, e-mail ou réseaux sociaux, les informations que vous nous communiquez sont
+          traitées dans le cadre de votre demande, et conservées le temps nécessaire à son traitement.
+        </p>
+
+        <h2>2. Mesure d'audience — Plausible Analytics</h2>
+        <p>
+          Pour mesurer la fréquentation du site, nous utilisons <strong>Plausible Analytics</strong>,
+          un outil de mesure d'audience respectueux de la vie privée :
+        </p>
+        <ul>
+          <li>Aucun cookie n'est déposé sur votre appareil.</li>
+          <li>Aucune donnée personnelle (IP complète, identifiant unique) n'est conservée.</li>
+          <li>Les données sont anonymisées et agrégées.</li>
+          <li>Le service est conforme RGPD, CCPA, et exempté du consentement par la CNIL.</li>
+        </ul>
+        <p>
+          Données collectées : page visitée, source du trafic, type d'appareil, pays.
+          Plus d'informations sur <a href="https://plausible.io/data-policy" target="_blank" rel="noopener">plausible.io/data-policy</a>.
+        </p>
+
+        <h2>3. Cookies</h2>
+        <p>
+          Ce site n'utilise <strong>aucun cookie</strong> de traçage publicitaire ou tiers.
+          Seul un cookie technique peut être déposé par votre navigateur pour le bon fonctionnement
+          du site (préférences d'affichage).
+        </p>
+
+        <h2>4. Vos droits</h2>
+        <p>
+          Conformément au RGPD et à la loi Informatique et Libertés, vous disposez d'un droit
+          d'accès, de rectification, d'effacement, de limitation, d'opposition et de portabilité
+          sur vos données personnelles.
+        </p>
+        <p>
+          Pour exercer ces droits, contactez-nous :<br />
+          Email : <a href={`mailto:${nap.email}`}>{nap.email}</a><br />
+          Téléphone : <a href={`tel:${nap.phone}`}>{nap.phoneDisplay}</a><br />
+          Courrier : {nap.street}, {nap.postalCode} {nap.city}
+        </p>
+        <p>
+          Vous pouvez également introduire une réclamation auprès de la <strong>CNIL</strong> :
+          <a href="https://www.cnil.fr/fr/plaintes" target="_blank" rel="noopener">cnil.fr/fr/plaintes</a>.
+        </p>
+
+        <h2>5. Modifications</h2>
+        <p>
+          Cette politique peut être mise à jour à tout moment. La date de dernière mise à jour
+          figure ci-dessous.
+        </p>
+        <p class="text-stone-500 text-sm">
+          Dernière mise à jour : {new Date().toLocaleDateString('fr-FR', { year: 'numeric', month: 'long' })}.
+        </p>
+      </div>
+    </article>
+  </main>
+  <Footer />
+</Base>
+
+<style>
+  .prose h2 {
+    @apply text-2xl font-bold text-white mt-10 mb-4 font-display;
+  }
+  .prose p {
+    @apply text-stone-300 leading-relaxed mb-4;
+  }
+  .prose ul {
+    @apply text-stone-300 list-disc list-inside mb-4 space-y-1;
+  }
+  .prose a {
+    @apply text-amber-400 hover:text-amber-300 underline;
+  }
+</style>

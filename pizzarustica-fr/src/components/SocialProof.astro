@@ -1,0 +1,31 @@
+---
+import { aggregate, social } from '@/data/config';
+const stars = '★★★★★'.slice(0, Math.round(aggregate.rating));
+const empty = '★★★★★'.slice(Math.round(aggregate.rating));
+---
+
+<section class="bg-stone-900 border-y border-stone-800 py-6">
+  <div class="container-page flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-center">
+    <div class="flex items-center gap-2">
+      <span class="text-amber-400 text-lg tracking-wider" aria-hidden="true">
+        <span>{stars}</span><span class="text-stone-700">{empty}</span>
+      </span>
+      <span class="text-white font-bold text-lg">{aggregate.rating.toFixed(1)}</span>
+      <span class="text-stone-400 text-sm">/ 5</span>
+    </div>
+    <p class="text-stone-300 text-sm">
+      <strong class="text-white">{aggregate.reviewCount.toLocaleString('fr-FR')}+</strong> avis clients
+    </p>
+    <div class="flex items-center gap-3 text-xs text-stone-400">
+      <a href={social.tripadvisor} target="_blank" rel="noopener" class="hover:text-amber-400 transition-colors" data-plausible-event-name="social_click_tripadvisor">
+        TripAdvisor
+      </a>
+      <span aria-hidden="true">·</span>
+      <a href={social.yelp} target="_blank" rel="noopener" class="hover:text-amber-400 transition-colors" data-plausible-event-name="social_click_yelp">
+        Yelp
+      </a>
+      <span aria-hidden="true">·</span>
+      <span>Google</span>
+    </div>
+  </div>
+</section>

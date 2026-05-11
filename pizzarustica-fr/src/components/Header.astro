@@ -1,0 +1,92 @@
+---
+import { nap } from '@/data/config';
+---
+
+<header class="fixed top-0 left-0 right-0 z-50 bg-stone-950/95 backdrop-blur-sm border-b border-stone-900">
+  <div class="container-page flex items-center justify-between py-3">
+    <a href="/" class="flex items-center gap-2" aria-label="Pizza Rustica — accueil">
+      <img src="/img/logo.svg" alt="Pizza Rustica" class="h-9 w-auto" width="120" height="36" />
+    </a>
+
+    <nav class="hidden md:flex items-center gap-6 text-sm font-medium text-stone-200" aria-label="Navigation principale">
+      <a href="/#menu" class="hover:text-amber-400 transition-colors">La Carte</a>
+      <a href="/#pizzas" class="hover:text-amber-400 transition-colors">Nos Pizzas</a>
+      <a href="/#avis" class="hover:text-amber-400 transition-colors">Avis</a>
+      <a href="/#acces" class="hover:text-amber-400 transition-colors">Accès</a>
+      <a
+        href={`tel:${nap.phone}`}
+        class="bg-amber-500 text-stone-950 px-4 py-2 rounded-full font-bold hover:bg-amber-400 transition-colors"
+        data-plausible-event-name="click_cta_appeler_header">
+        Commander
+      </a>
+    </nav>
+
+    <button
+      id="burger-btn"
+      class="md:hidden flex flex-col gap-1.5 p-2"
+      aria-label="Ouvrir le menu"
+      aria-expanded="false"
+      aria-controls="mobile-menu">
+      <span class="burger-line block h-0.5 w-6 bg-stone-200 transition-all duration-300 origin-center"></span>
+      <span class="burger-line block h-0.5 w-6 bg-stone-200 transition-all duration-300"></span>
+      <span class="burger-line block h-0.5 w-6 bg-stone-200 transition-all duration-300 origin-center"></span>
+    </button>
+  </div>
+
+  <nav
+    id="mobile-menu"
+    class="md:hidden hidden flex-col gap-0 bg-stone-950 border-t border-stone-800"
+    aria-label="Menu mobile">
+    <a href="/#menu" class="px-6 py-4 text-stone-200 border-b border-stone-800 hover:bg-stone-900">La Carte</a>
+    <a href="/#pizzas" class="px-6 py-4 text-stone-200 border-b border-stone-800 hover:bg-stone-900">Nos Pizzas</a>
+    <a href="/#avis" class="px-6 py-4 text-stone-200 border-b border-stone-800 hover:bg-stone-900">Avis Clients</a>
+    <a href="/#acces" class="px-6 py-4 text-stone-200 border-b border-stone-800 hover:bg-stone-900">Accès & Horaires</a>
+    <div class="p-4">
+      <a
+        href={`tel:${nap.phone}`}
+        class="flex items-center justify-center gap-2 w-full bg-amber-500 text-stone-950 px-4 py-4 rounded-xl font-bold text-lg active:scale-95 transition-transform"
+        data-plausible-event-name="click_cta_appeler_mobile_menu">
+        Appeler pour commander
+      </a>
+    </div>
+  </nav>
+</header>
+
+<script>
+  const btn = document.getElementById('burger-btn');
+  const menu = document.getElementById('mobile-menu');
+
+  if (btn && menu) {
+    const lines = btn.querySelectorAll('.burger-line');
+
+    const setOpen = (isOpen: boolean) => {
+      menu.classList.toggle('hidden', !isOpen);
+      menu.classList.toggle('flex', isOpen);
+      btn.setAttribute('aria-expanded', String(isOpen));
+      btn.setAttribute('aria-label', isOpen ? 'Fermer le menu' : 'Ouvrir le menu');
+
+      lines[0]?.classList.toggle('rotate-45', isOpen);
+      lines[0]?.classList.toggle('translate-y-2', isOpen);
+      lines[1]?.classList.toggle('opacity-0', isOpen);
+      lines[2]?.classList.toggle('-rotate-45', isOpen);
+      lines[2]?.classList.toggle('-translate-y-2', isOpen);
+    };
+
+    btn.addEventListener('click', () => {
+      const isOpen = menu.classList.contains('hidden');
+      setOpen(isOpen);
+    });
+
+    menu.querySelectorAll('a').forEach((link) => {
+      link.addEventListener('click', () => setOpen(false));
+    });
+
+    // Escape pour fermer
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !menu.classList.contains('hidden')) {
+        setOpen(false);
+        btn.focus();
+      }
+    });
+  }
+</script>
