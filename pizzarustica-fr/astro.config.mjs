@@ -3,7 +3,7 @@ import tailwind from '@astrojs/tailwind';
 import sitemap from '@astrojs/sitemap';
 
 export default defineConfig({
-  site: 'https://www.pizzarustica.fr',
+  site: 'https://pizzarustica.fr',
   output: 'static',
   trailingSlash: 'ignore',
   integrations: [

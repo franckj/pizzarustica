@@ -165,82 +165,65 @@ jobs:
           done
           echo "✓ Cleaned $deleted stray record(s); Pages-managed CNAMEs (if any) left intact."
 
-      - name: Attach (or re-attach) custom domains (production only)
+      - name: Attach apex to Pages project (production only)
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
           set -euo pipefail
-          PROJECT="pizzarustica-fr"
-          API="https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/pages/projects/${PROJECT}/domains"
+          API="https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/pages/projects/pizzarustica-fr/domains"
           AUTH=(-H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" -H "Content-Type: application/json")
 
-          attach() {
-            local domain="$1"
-            local code
-            code=$(curl -sS -o /tmp/attach.json -w "%{http_code}" -X POST "${AUTH[@]}" "$API" \
-              --data "{\"name\":\"$domain\"}")
-            if [ "$code" != "200" ] && [ "$code" != "201" ]; then
-              echo "✗ Attach failed for $domain (HTTP $code):"
-              cat /tmp/attach.json
-              echo
-              echo "Hint: token needs 'Account · Cloudflare Pages · Edit' AND the domain must be in a zone on this account."
-              return 1
-            fi
-            echo "✓ $domain attached."
-          }
+          info_code=$(curl -sS -o /tmp/info.json -w "%{http_code}" "${AUTH[@]}" "$API/pizzarustica.fr")
+          status=$(jq -r '.result.status // "missing"' /tmp/info.json 2>/dev/null || echo "missing")
+          if [ "$status" = "active" ]; then
+            echo "✓ apex already active."
+          else
+            curl -sS -X POST "${AUTH[@]}" "$API" --data '{"name":"pizzarustica.fr"}' >/dev/null
+            echo "→ apex attach requested."
+          fi
 
-          ZONE_BASE="https://api.cloudflare.com/client/v4"
-          ZONE_ID=$(curl -sS "${AUTH[@]}" "$ZONE_BASE/zones?name=pizzarustica.fr" | jq -r '.result[0].id // empty')
-
-          for DOMAIN in www.pizzarustica.fr pizzarustica.fr; do
-            info_code=$(curl -sS -o /tmp/info.json -w "%{http_code}" "${AUTH[@]}" "$API/$DOMAIN")
-            status=$(jq -r '.result.status // "missing"' /tmp/info.json 2>/dev/null || echo "missing")
-
-            # Even if Pages thinks the domain is active, verify a routing DNS record exists.
-            records_in_zone=0
-            if [ -n "$ZONE_ID" ]; then
-              records_in_zone=$(curl -sS "${AUTH[@]}" "$ZONE_BASE/zones/$ZONE_ID/dns_records?name=$DOMAIN" \
-                | jq '[.result[]? | select(.type | test("^(A|AAAA|CNAME)$"))] | length')
-            fi
-            echo "Domain $DOMAIN: HTTP $info_code, status=$status, A/AAAA/CNAME records in zone=$records_in_zone"
-
-            if [ "$info_code" = "404" ] || [ "$status" = "missing" ]; then
-              echo "→ Attaching fresh…"
-              attach "$DOMAIN"
-              continue
-            fi
-
-            if [ "$status" = "active" ] && [ "$records_in_zone" -gt 0 ]; then
-              echo "✓ $DOMAIN already active with routing records present."
-              continue
-            fi
-
-            echo "→ Re-attaching ($DOMAIN status=$status, records=$records_in_zone)…"
-            del_code=$(curl -sS -o /tmp/del.json -w "%{http_code}" -X DELETE "${AUTH[@]}" "$API/$DOMAIN")
-            if [ "$del_code" != "200" ]; then
-              echo "✗ Detach failed (HTTP $del_code):"
-              cat /tmp/del.json
-              exit 1
-            fi
-            sleep 3
-            attach "$DOMAIN"
-          done
-
-          echo "--- Final domain state ---"
-          curl -sS "${AUTH[@]}" "$API" | jq '.result[] | {name, status, certificate_authority}'
-
-      - name: Install apex → www 301 redirect (best effort)
+      - name: Ensure www CNAME points into Cloudflare (proxied, for redirect rule)
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
           set -euo pipefail
           ZONE_NAME="pizzarustica.fr"
-          DESC="apex-to-www redirect (managed by CI)"
+          AUTH=(-H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" -H "Content-Type: application/json")
+          BASE="https://api.cloudflare.com/client/v4"
+
+          zone_id=$(curl -sS "${AUTH[@]}" "$BASE/zones?name=$ZONE_NAME" | jq -r '.result[0].id // empty')
+          [ -z "$zone_id" ] && { echo "⚠ Zone unreachable, skipping."; exit 0; }
+
+          records=$(curl -sS "${AUTH[@]}" "$BASE/zones/$zone_id/dns_records?name=www.$ZONE_NAME")
+          # If a proxied CNAME/A/AAAA already exists on www, leave it (the redirect rule will fire).
+          proxied=$(echo "$records" | jq '[.result[]? | select(.type | test("^(A|AAAA|CNAME)$")) | select(.proxied == true)] | length')
+          if [ "$proxied" -ge 1 ]; then
+            echo "✓ www already has a proxied routing record."
+            exit 0
+          fi
+
+          # Otherwise, strip any non-proxied records and create a proxied CNAME www → apex.
+          ids=$(echo "$records" | jq -r '.result[]? | select(.type | test("^(A|AAAA|CNAME)$")) | .id')
+          for rid in $ids; do
+            curl -sS -X DELETE "${AUTH[@]}" "$BASE/zones/$zone_id/dns_records/$rid" >/dev/null
+          done
+          body=$(jq -nc --arg n "$ZONE_NAME" '{type:"CNAME", name:"www", content:$n, proxied:true, ttl:1, comment:"managed by CI: www routes through CF so the www→apex redirect rule fires"}')
+          curl -sS -X POST "${AUTH[@]}" "$BASE/zones/$zone_id/dns_records" --data "$body" >/dev/null
+          echo "✓ Created proxied CNAME www → $ZONE_NAME."
+
+      - name: Install www → apex 301 redirect (best effort)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          set -euo pipefail
+          ZONE_NAME="pizzarustica.fr"
+          DESC="www-to-apex redirect (managed by CI)"
+          # Also match the legacy description so old apex→www rules get removed.
+          LEGACY_DESC="apex-to-www redirect (managed by CI)"
           AUTH=(-H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" -H "Content-Type: application/json")
           BASE="https://api.cloudflare.com/client/v4"
 
           zone_id=$(curl -sS "${AUTH[@]}" "$BASE/zones?name=$ZONE_NAME" \
             | jq -r '.result[0].id // empty')
           if [ -z "$zone_id" ]; then
-            echo "⚠ Zone $ZONE_NAME not found via this token — skipping redirect. Site still works on both hostnames."
+            echo "⚠ Zone $ZONE_NAME not found via this token — skipping redirect."
             exit 0
           fi
           echo "Zone $zone_id"
@@ -251,11 +234,11 @@ jobs:
             action: "redirect",
             description: $desc,
             enabled: true,
-            expression: "(http.host eq \"pizzarustica.fr\")",
+            expression: "(http.host eq \"www.pizzarustica.fr\")",
             action_parameters: {
               from_value: {
                 status_code: 301,
-                target_url: { expression: "concat(\"https://www.pizzarustica.fr\", http.request.uri.path)" },
+                target_url: { expression: "concat(\"https://pizzarustica.fr\", http.request.uri.path)" },
                 preserve_query_string: true
               }
             }
@@ -265,7 +248,8 @@ jobs:
           if [ "$code" = "404" ]; then
             existing="[]"
           elif [ "$code" = "200" ]; then
-            existing=$(jq -c --arg desc "$DESC" '[.result.rules[] | select(.description != $desc)]' /tmp/ruleset.json)
+            existing=$(jq -c --arg desc "$DESC" --arg legacy "$LEGACY_DESC" \
+              '[.result.rules[] | select(.description != $desc and .description != $legacy)]' /tmp/ruleset.json)
           elif [ "$code" = "403" ]; then
             echo "⚠ Token lacks zone scope (HTTP 403) — skipping redirect."
             echo "  To enable: add 'Zone · Config · Edit' to the CLOUDFLARE_API_TOKEN."
@@ -284,4 +268,4 @@ jobs:
             cat /tmp/put.json
             exit 0
           fi
-          echo "✓ Redirect rule installed: pizzarustica.fr/* → https://www.pizzarustica.fr/* (301)"
+          echo "✓ Redirect rule installed: www.pizzarustica.fr/* → https://pizzarustica.fr/* (301)"

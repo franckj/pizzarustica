@@ -1,5 +1,5 @@
 export const site = {
-  url: 'https://www.pizzarustica.fr',
+  url: 'https://pizzarustica.fr',
   name: 'Pizza Rustica',
   legalName: 'GRANO', // TODO: confirmer raison sociale exacte + SIREN
   founded: 2007,
