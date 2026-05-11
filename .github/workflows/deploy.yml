@@ -93,6 +93,38 @@ jobs:
             --commit-dirty=true \
             --commit-message="ci: PR #${{ github.event.pull_request.number }} (${BRANCH})"
 
+      - name: Debug — current Cloudflare state (production only)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          set +e
+          AUTH=(-H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}")
+          BASE="https://api.cloudflare.com/client/v4"
+          echo "== Token presence =="
+          [ -n "${CLOUDFLARE_API_TOKEN:-}" ] && echo "API_TOKEN: set (len=${#CLOUDFLARE_API_TOKEN})" || echo "API_TOKEN: MISSING"
+          [ -n "${CLOUDFLARE_ACCOUNT_ID:-}" ] && echo "ACCOUNT_ID: set (len=${#CLOUDFLARE_ACCOUNT_ID})" || echo "ACCOUNT_ID: MISSING"
+          echo
+          echo "== Pages project (pizzarustica-fr) =="
+          curl -sS "${AUTH[@]}" "$BASE/accounts/$CLOUDFLARE_ACCOUNT_ID/pages/projects/pizzarustica-fr" \
+            | jq '{success, name: .result.name, subdomain: .result.subdomain, domains: .result.domains, latest: .result.latest_deployment.url, errors}'
+          echo
+          echo "== Pages domains attached =="
+          curl -sS "${AUTH[@]}" "$BASE/accounts/$CLOUDFLARE_ACCOUNT_ID/pages/projects/pizzarustica-fr/domains" \
+            | jq '{success, count: (.result | length), domains: [.result[]? | {name, status}], errors}'
+          echo
+          echo "== Zone pizzarustica.fr =="
+          curl -sS "${AUTH[@]}" "$BASE/zones?name=pizzarustica.fr" \
+            | jq '{success, count: (.result | length), id: .result[0].id, status: .result[0].status, errors}'
+          ZONE_ID=$(curl -sS "${AUTH[@]}" "$BASE/zones?name=pizzarustica.fr" | jq -r '.result[0].id // empty')
+          if [ -n "$ZONE_ID" ]; then
+            echo
+            echo "== DNS records on apex + www =="
+            for NAME in pizzarustica.fr www.pizzarustica.fr; do
+              echo "--- $NAME ---"
+              curl -sS "${AUTH[@]}" "$BASE/zones/$ZONE_ID/dns_records?name=$NAME" \
+                | jq '.result[]? | {type, name, content, proxied, id}'
+            done
+          fi
+
       - name: Remove conflicting DNS records on apex/www (production only)
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
@@ -130,7 +162,7 @@ jobs:
           done
           echo "✓ Cleaned $deleted stray record(s); Pages-managed CNAMEs (if any) left intact."
 
-      - name: Attach custom domains (production only)
+      - name: Attach (or re-attach) custom domains (production only)
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
           set -euo pipefail
@@ -138,26 +170,50 @@ jobs:
           API="https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/pages/projects/${PROJECT}/domains"
           AUTH=(-H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" -H "Content-Type: application/json")
 
-          curl -sS "${AUTH[@]}" "$API" > /tmp/domains.json
-          existing=$(grep -oE '"name":"[^"]+"' /tmp/domains.json | cut -d'"' -f4 || true)
-
-          for DOMAIN in www.pizzarustica.fr pizzarustica.fr; do
-            if echo "$existing" | grep -qx "$DOMAIN"; then
-              echo "✓ $DOMAIN already attached."
-              continue
-            fi
-            echo "Attaching $DOMAIN…"
+          attach() {
+            local domain="$1"
+            local code
             code=$(curl -sS -o /tmp/attach.json -w "%{http_code}" -X POST "${AUTH[@]}" "$API" \
-              --data "{\"name\":\"$DOMAIN\"}")
+              --data "{\"name\":\"$domain\"}")
             if [ "$code" != "200" ] && [ "$code" != "201" ]; then
-              echo "✗ Failed for $DOMAIN (HTTP $code):"
+              echo "✗ Attach failed for $domain (HTTP $code):"
               cat /tmp/attach.json
               echo
               echo "Hint: token needs 'Account · Cloudflare Pages · Edit' AND the domain must be in a zone on this account."
+              return 1
+            fi
+            echo "✓ $domain attached."
+          }
+
+          for DOMAIN in www.pizzarustica.fr pizzarustica.fr; do
+            info_code=$(curl -sS -o /tmp/info.json -w "%{http_code}" "${AUTH[@]}" "$API/$DOMAIN")
+            status=$(jq -r '.result.status // "missing"' /tmp/info.json 2>/dev/null || echo "missing")
+            echo "Domain $DOMAIN: HTTP $info_code, status=$status"
+
+            if [ "$info_code" = "404" ] || [ "$status" = "missing" ]; then
+              echo "→ Attaching fresh…"
+              attach "$DOMAIN"
+              continue
+            fi
+
+            if [ "$status" = "active" ]; then
+              echo "✓ $DOMAIN already active."
+              continue
+            fi
+
+            echo "→ Status '$status' — detaching and re-attaching…"
+            del_code=$(curl -sS -o /tmp/del.json -w "%{http_code}" -X DELETE "${AUTH[@]}" "$API/$DOMAIN")
+            if [ "$del_code" != "200" ]; then
+              echo "✗ Detach failed (HTTP $del_code):"
+              cat /tmp/del.json
               exit 1
             fi
-            echo "✓ $DOMAIN attached."
+            sleep 3
+            attach "$DOMAIN"
           done
+
+          echo "--- Final domain state ---"
+          curl -sS "${AUTH[@]}" "$API" | jq '.result[] | {name, status, certificate_authority}'
 
       - name: Install apex → www 301 redirect (best effort)
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
