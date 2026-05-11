@@ -32,7 +32,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
           cache-dependency-path: pizzarustica-fr/package-lock.json
 
@@ -44,13 +44,33 @@ jobs:
 
       - name: Ensure Cloudflare Pages project exists
         run: |
-          if npx wrangler pages project list 2>&1 | awk 'NR>2 {print $1}' | grep -qx "pizzarustica-fr"; then
-            echo "Project pizzarustica-fr already exists."
-          else
-            echo "Creating Cloudflare Pages project pizzarustica-fr…"
-            npx wrangler pages project create pizzarustica-fr \
-              --production-branch=main
+          set -euo pipefail
+          PROJECT="pizzarustica-fr"
+          API="https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/pages/projects"
+          AUTH=(-H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" -H "Content-Type: application/json")
+
+          status=$(curl -sS -o /tmp/project.json -w "%{http_code}" "${AUTH[@]}" "${API}/${PROJECT}")
+          if [ "$status" = "200" ]; then
+            echo "Project ${PROJECT} already exists."
+            exit 0
           fi
+          if [ "$status" != "404" ]; then
+            echo "Unexpected response (HTTP ${status}) checking project:"
+            cat /tmp/project.json
+            exit 1
+          fi
+
+          echo "Creating Cloudflare Pages project ${PROJECT}…"
+          create_status=$(curl -sS -o /tmp/create.json -w "%{http_code}" -X POST "${AUTH[@]}" "$API" \
+            --data "{\"name\":\"${PROJECT}\",\"production_branch\":\"main\"}")
+          if [ "$create_status" != "200" ] && [ "$create_status" != "201" ]; then
+            echo "Failed to create project (HTTP ${create_status}):"
+            cat /tmp/create.json
+            echo
+            echo "Hint: the CLOUDFLARE_API_TOKEN needs 'Account · Cloudflare Pages · Edit' permission to create projects."
+            exit 1
+          fi
+          echo "Project ${PROJECT} created."
 
       - name: Deploy to Cloudflare Pages (production)
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -72,3 +92,90 @@ jobs:
             --branch="$SAFE_BRANCH" \
             --commit-dirty=true \
             --commit-message="ci: PR #${{ github.event.pull_request.number }} (${BRANCH})"
+
+      - name: Attach custom domains (production only)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          set -euo pipefail
+          PROJECT="pizzarustica-fr"
+          API="https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/pages/projects/${PROJECT}/domains"
+          AUTH=(-H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" -H "Content-Type: application/json")
+
+          curl -sS "${AUTH[@]}" "$API" > /tmp/domains.json
+          existing=$(grep -oE '"name":"[^"]+"' /tmp/domains.json | cut -d'"' -f4 || true)
+
+          for DOMAIN in www.pizzarustica.fr pizzarustica.fr; do
+            if echo "$existing" | grep -qx "$DOMAIN"; then
+              echo "✓ $DOMAIN already attached."
+              continue
+            fi
+            echo "Attaching $DOMAIN…"
+            code=$(curl -sS -o /tmp/attach.json -w "%{http_code}" -X POST "${AUTH[@]}" "$API" \
+              --data "{\"name\":\"$DOMAIN\"}")
+            if [ "$code" != "200" ] && [ "$code" != "201" ]; then
+              echo "✗ Failed for $DOMAIN (HTTP $code):"
+              cat /tmp/attach.json
+              echo
+              echo "Hint: token needs 'Account · Cloudflare Pages · Edit' AND the domain must be in a zone on this account."
+              exit 1
+            fi
+            echo "✓ $DOMAIN attached."
+          done
+
+      - name: Install apex → www 301 redirect (best effort)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          set -euo pipefail
+          ZONE_NAME="pizzarustica.fr"
+          DESC="apex-to-www redirect (managed by CI)"
+          AUTH=(-H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" -H "Content-Type: application/json")
+          BASE="https://api.cloudflare.com/client/v4"
+
+          zone_id=$(curl -sS "${AUTH[@]}" "$BASE/zones?name=$ZONE_NAME" \
+            | jq -r '.result[0].id // empty')
+          if [ -z "$zone_id" ]; then
+            echo "⚠ Zone $ZONE_NAME not found via this token — skipping redirect. Site still works on both hostnames."
+            exit 0
+          fi
+          echo "Zone $zone_id"
+
+          PHASE="$BASE/zones/$zone_id/rulesets/phases/http_request_dynamic_redirect/entrypoint"
+
+          NEW_RULE=$(jq -nc --arg desc "$DESC" '{
+            action: "redirect",
+            description: $desc,
+            enabled: true,
+            expression: "(http.host eq \"pizzarustica.fr\")",
+            action_parameters: {
+              from_value: {
+                status_code: 301,
+                target_url: { expression: "concat(\"https://www.pizzarustica.fr\", http.request.uri.path)" },
+                preserve_query_string: true
+              }
+            }
+          }')
+
+          code=$(curl -sS -o /tmp/ruleset.json -w "%{http_code}" "${AUTH[@]}" "$PHASE")
+          if [ "$code" = "404" ]; then
+            existing="[]"
+          elif [ "$code" = "200" ]; then
+            existing=$(jq -c --arg desc "$DESC" '[.result.rules[] | select(.description != $desc)]' /tmp/ruleset.json)
+          elif [ "$code" = "403" ]; then
+            echo "⚠ Token lacks zone scope (HTTP 403) — skipping redirect."
+            echo "  To enable: add 'Zone · Config · Edit' to the CLOUDFLARE_API_TOKEN."
+            exit 0
+          else
+            echo "⚠ Unexpected HTTP $code fetching ruleset — skipping redirect:"
+            cat /tmp/ruleset.json
+            exit 0
+          fi
+
+          body=$(jq -nc --argjson existing "$existing" --argjson new "$NEW_RULE" \
+            '{rules: ($existing + [$new])}')
+          put_code=$(curl -sS -o /tmp/put.json -w "%{http_code}" -X PUT "${AUTH[@]}" "$PHASE" --data "$body")
+          if [ "$put_code" != "200" ]; then
+            echo "⚠ Failed to install redirect rule (HTTP $put_code) — skipping:"
+            cat /tmp/put.json
+            exit 0
+          fi
+          echo "✓ Redirect rule installed: pizzarustica.fr/* → https://www.pizzarustica.fr/* (301)"
