@@ -1,0 +1,148 @@
+---
+import '@/styles/global.css';
+import { site, nap, social, aggregate } from '@/data/config';
+
+interface Props {
+  title?: string;
+  description?: string;
+  canonical?: string;
+  ogImage?: string;
+  noindex?: boolean;
+}
+
+const {
+  title = 'Pizza Rustica Paris – Pizzeria Saint-Michel | 24 rue Saint-André des Arts, 75006',
+  description = "Pizzas napolitaines artisanales à Paris 6ᵉ depuis 2007. Sur place, à emporter et livraison. Ouvert 7j/7 de 10h30 à minuit. 24 rue Saint-André des Arts.",
+  canonical = site.url,
+  ogImage = `${site.url}/og-image.jpg`,
+  noindex = false,
+} = Astro.props;
+
+const restaurantSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'Restaurant',
+  '@id': `${site.url}/#restaurant`,
+  name: site.name,
+  alternateName: 'Pizza Rustica Saint Michel Paris France',
+  description: site.description,
+  image: [
+    `${site.url}/img/facade-1x1.jpg`,
+    `${site.url}/img/pizzas-4x3.jpg`,
+    `${site.url}/img/interieur-16x9.jpg`,
+  ],
+  url: site.url,
+  telephone: nap.phone,
+  email: nap.email,
+  priceRange: '€€',
+  currenciesAccepted: 'EUR',
+  paymentAccepted: 'Cash, Credit Card, Ticket Restaurant',
+  servesCuisine: ['Pizza', 'Italian', 'Napolitaine', 'Street Food'],
+  address: {
+    '@type': 'PostalAddress',
+    streetAddress: nap.street,
+    addressLocality: nap.city,
+    postalCode: nap.postalCode,
+    addressCountry: nap.country,
+  },
+  geo: {
+    '@type': 'GeoCoordinates',
+    latitude: nap.latitude,
+    longitude: nap.longitude,
+  },
+  hasMap: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${site.name} ${nap.street} ${nap.city}`)}`,
+  openingHoursSpecification: [
+    {
+      '@type': 'OpeningHoursSpecification',
+      dayOfWeek: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday'],
+      opens: '10:30',
+      closes: '00:00',
+    },
+    {
+      '@type': 'OpeningHoursSpecification',
+      dayOfWeek: ['Friday', 'Saturday'],
+      opens: '10:30',
+      closes: '02:00',
+    },
+  ],
+  menu: `${site.url}/carte`,
+  acceptsReservations: 'False',
+  amenityFeature: [
+    { '@type': 'LocationFeatureSpecification', name: 'Terrace', value: true },
+    { '@type': 'LocationFeatureSpecification', name: 'Takeaway', value: true },
+    { '@type': 'LocationFeatureSpecification', name: 'Delivery', value: true },
+    { '@type': 'LocationFeatureSpecification', name: 'Dine-in', value: true },
+  ],
+  sameAs: [social.facebook, social.instagram, social.tripadvisor, social.yelp],
+  foundingDate: String(site.founded),
+  aggregateRating: {
+    '@type': 'AggregateRating',
+    ratingValue: aggregate.rating,
+    reviewCount: aggregate.reviewCount,
+  },
+};
+---
+
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#1c1917" />
+
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    {noindex && <meta name="robots" content="noindex,nofollow" />}
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="restaurant" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:locale" content="fr_FR" />
+    <meta property="og:site_name" content="Pizza Rustica Paris" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
+
+    <!-- Geo local SEO -->
+    <meta name="geo.region" content="FR-75" />
+    <meta name="geo.placename" content="Paris 6e" />
+    <meta name="geo.position" content={`${nap.latitude};${nap.longitude}`} />
+    <meta name="ICBM" content={`${nap.latitude}, ${nap.longitude}`} />
+
+    <!-- Favicons -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+
+    <!-- Preconnect Plausible (perf) -->
+    <link rel="preconnect" href="https://plausible.io" crossorigin />
+
+    <!-- Schema.org Restaurant JSON-LD -->
+    <script type="application/ld+json" set:html={JSON.stringify(restaurantSchema)} />
+
+    <!-- Plausible (privacy-first, CNIL-friendly, pas de cookie) -->
+    <script
+      is:inline
+      defer
+      data-domain="pizzarustica.fr"
+      src="https://plausible.io/js/script.tagged-events.js"></script>
+
+    <slot name="head" />
+  </head>
+  <body>
+    <a
+      href="#main"
+      class="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[100] focus:bg-amber-500 focus:text-stone-950 focus:px-3 focus:py-2 focus:rounded">
+      Aller au contenu principal
+    </a>
+    <slot />
+  </body>
+</html>

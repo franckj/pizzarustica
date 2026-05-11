@@ -1,0 +1,44 @@
+---
+import { nap, site, social } from '@/data/config';
+const year = new Date().getFullYear();
+---
+
+<footer class="bg-stone-950 border-t border-stone-900 py-10 px-4">
+  <div class="container-page">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+      <div>
+        <h3 class="text-white font-bold mb-3 font-display text-lg">{site.name}</h3>
+        <p class="text-stone-400 text-sm leading-relaxed">
+          Pizzeria napolitaine au cœur de Saint-Michel.<br />
+          Sur place · À emporter · Livraison.
+        </p>
+      </div>
+      <div>
+        <h3 class="text-amber-400 text-xs font-bold uppercase tracking-widest mb-3">Adresse</h3>
+        <address class="not-italic text-stone-400 text-sm leading-relaxed">
+          {nap.street}<br />
+          {nap.postalCode} {nap.city}<br />
+          <a href={`tel:${nap.phone}`} class="hover:text-amber-400 transition-colors">
+            {nap.phoneDisplay}
+          </a>
+        </address>
+      </div>
+      <div>
+        <h3 class="text-amber-400 text-xs font-bold uppercase tracking-widest mb-3">Liens</h3>
+        <ul class="space-y-1 text-sm">
+          <li><a href="/carte" class="text-stone-400 hover:text-amber-400 transition-colors">La carte</a></li>
+          <li><a href="/mentions-legales" class="text-stone-400 hover:text-amber-400 transition-colors">Mentions légales</a></li>
+          <li><a href="/politique-confidentialite" class="text-stone-400 hover:text-amber-400 transition-colors">Politique de confidentialité</a></li>
+          <li>
+            <a href={social.instagram} target="_blank" rel="noopener" class="text-stone-400 hover:text-amber-400 transition-colors">
+              Instagram
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+    <div class="border-t border-stone-900 pt-6 text-center text-stone-500 text-xs">
+      © {year} {site.legalName} — {site.name}. Tous droits réservés.
+    </div>
+  </div>
+</footer>

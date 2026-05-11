@@ -1,0 +1,92 @@
+---
+import { nap, hours } from '@/data/config';
+
+const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+  `Pizza Rustica ${nap.street} ${nap.city}`,
+)}`;
+---
+
+<section id="acces" class="section bg-stone-900">
+  <div class="container-page max-w-3xl">
+    <div class="text-center mb-10">
+      <p class="text-amber-400 text-sm font-semibold tracking-widest uppercase mb-3">
+        Accès & horaires
+      </p>
+      <h2 class="h-section">Où nous trouver</h2>
+    </div>
+
+    <!-- Carte cliquable (lien Maps, pas d'iframe lourde) -->
+    <!-- TODO: brancher Google Static Maps si clé fournie via env -->
+    <a
+      href={mapsUrl}
+      target="_blank"
+      rel="noopener"
+      class="block rounded-2xl overflow-hidden mb-6 group border border-stone-800"
+      data-plausible-event-name="map_click"
+      aria-label="Ouvrir l'itinéraire sur Google Maps">
+      <img
+        src="/img/map-placeholder.svg"
+        alt={`Plan d'accès Pizza Rustica — ${nap.street}, ${nap.postalCode} ${nap.city}`}
+        class="w-full h-48 object-cover group-hover:opacity-90 transition-opacity"
+        width="800"
+        height="320"
+        loading="lazy"
+      />
+    </a>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <!-- NAP -->
+      <address class="not-italic bg-stone-950 rounded-2xl p-6 border border-stone-800">
+        <h3 class="text-amber-400 text-xs font-bold uppercase tracking-widest mb-4">Adresse</h3>
+        <p class="text-white font-semibold text-lg leading-tight mb-1">{nap.street}</p>
+        <p class="text-stone-300">{nap.postalCode} {nap.city}</p>
+        <p class="text-stone-500 text-sm mt-1">{nap.district}</p>
+        <p class="text-stone-400 text-sm mt-3">
+          <span class="text-amber-400">Métro&nbsp;:</span> {nap.metro}
+        </p>
+
+        <hr class="border-stone-800 my-5" />
+
+        <h3 class="text-amber-400 text-xs font-bold uppercase tracking-widest mb-3">Contact</h3>
+        <a
+          href={`tel:${nap.phone}`}
+          class="block text-white font-bold text-lg hover:text-amber-400 transition-colors mb-1"
+          data-plausible-event-name="click_cta_appeler_location">
+          {nap.phoneDisplay}
+        </a>
+        <a
+          href={`mailto:${nap.email}`}
+          class="text-stone-400 text-sm hover:text-amber-400 transition-colors break-all">
+          {nap.email}
+        </a>
+      </address>
+
+      <!-- Horaires -->
+      <div class="bg-stone-950 rounded-2xl p-6 border border-stone-800">
+        <h3 class="text-amber-400 text-xs font-bold uppercase tracking-widest mb-4">Horaires d'ouverture</h3>
+        <table class="w-full text-sm">
+          <tbody class="divide-y divide-stone-800">
+            {hours.map((h) => (
+              <tr>
+                <td class="text-stone-400 py-3">{h.label}</td>
+                <td class="text-white text-right py-3 font-medium">
+                  {h.open} – {h.close}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <p class="text-stone-500 text-xs mt-4">Ouvert 7j/7 · Jours fériés idem</p>
+      </div>
+    </div>
+
+    <a
+      href={mapsUrl}
+      target="_blank"
+      rel="noopener"
+      class="btn-secondary w-full mt-6"
+      data-plausible-event-name="map_click">
+      Itinéraire sur Google Maps →
+    </a>
+  </div>
+</section>

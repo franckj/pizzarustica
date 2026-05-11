@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 1920" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Photo placeholder Pizza Rustica">
+  <defs>
+    <radialGradient id="g" cx="50%" cy="40%" r="80%">
+      <stop offset="0%" stop-color="#b45309"/>
+      <stop offset="60%" stop-color="#7c2d12"/>
+      <stop offset="100%" stop-color="#1c1917"/>
+    </radialGradient>
+  </defs>
+  <rect width="1080" height="1920" fill="url(#g)"/>
+  <circle cx="540" cy="800" r="380" fill="#f59e0b" opacity="0.85"/>
+  <circle cx="540" cy="800" r="280" fill="#dc2626"/>
+  <g opacity="0.95">
+    <circle cx="420" cy="720" r="44" fill="#fef3c7"/>
+    <circle cx="620" cy="700" r="34" fill="#fef3c7"/>
+    <circle cx="600" cy="880" r="46" fill="#fef3c7"/>
+    <circle cx="430" cy="880" r="32" fill="#84cc16"/>
+    <circle cx="540" cy="800" r="26" fill="#84cc16"/>
+  </g>
+  <text x="540" y="1500" font-family="Georgia, serif" font-size="42" fill="#fafaf9" text-anchor="middle" opacity="0.4">
+    Image placeholder — TODO photo réelle
+  </text>
+</svg>

@@ -1,0 +1,42 @@
+---
+import { reviews } from '@/data/menu';
+
+const sourceLabel: Record<string, string> = {
+  Google: 'Google',
+  TripAdvisor: 'TripAdvisor',
+  Yelp: 'Yelp',
+};
+
+const formatDate = (iso: string) =>
+  new Date(iso).toLocaleDateString('fr-FR', { year: 'numeric', month: 'long' });
+---
+
+<section id="avis" class="section bg-stone-950">
+  <div class="container-page">
+    <div class="text-center mb-12">
+      <p class="text-amber-400 text-sm font-semibold tracking-widest uppercase mb-3">
+        Ils en parlent
+      </p>
+      <h2 class="h-section">Avis clients</h2>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+      {reviews.map((review) => (
+        <figure class="bg-stone-900 border border-stone-800 rounded-2xl p-6 flex flex-col">
+          <div class="flex items-center gap-2 mb-3 text-amber-400 text-base" aria-label={`Note ${review.rating} sur 5`}>
+            {'★'.repeat(review.rating)}<span class="text-stone-700">{'★'.repeat(5 - review.rating)}</span>
+          </div>
+          <blockquote class="text-stone-300 text-base flex-1 mb-4 leading-relaxed">
+            « {review.text} »
+          </blockquote>
+          <figcaption class="text-sm">
+            <p class="text-white font-semibold">{review.author}</p>
+            <p class="text-stone-500 text-xs">
+              {sourceLabel[review.source]} · {formatDate(review.date)}
+            </p>
+          </figcaption>
+        </figure>
+      ))}
+    </div>
+  </div>
+</section>

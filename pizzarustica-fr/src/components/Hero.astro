@@ -1,0 +1,46 @@
+---
+import { nap } from '@/data/config';
+---
+
+<section class="relative min-h-[100svh] flex flex-col justify-end pb-12 pt-24">
+  <picture class="absolute inset-0 -z-0">
+    <!-- TODO: remplacer par photo authentique four à bois / pizza Rustica -->
+    <img
+      src="/img/hero-pizza.svg"
+      alt="Pizza napolitaine au four à bois chez Pizza Rustica Paris"
+      class="absolute inset-0 w-full h-full object-cover"
+      fetchpriority="high"
+      decoding="async"
+      width="1080"
+      height="1920"
+    />
+  </picture>
+
+  <div class="absolute inset-0 bg-gradient-to-t from-stone-950 via-stone-950/70 to-stone-950/30"></div>
+
+  <div class="relative z-10 container-page text-center">
+    <p class="text-amber-400 text-xs sm:text-sm font-semibold tracking-[0.2em] uppercase mb-3 animate-fade-up">
+      Saint-Michel · Paris 6ᵉ · Depuis 2007
+    </p>
+    <h1 class="text-5xl sm:text-6xl md:text-7xl font-black font-display text-white leading-[1.05] mb-4 animate-fade-up">
+      Pizza Rustica
+    </h1>
+    <p class="text-stone-200 text-base sm:text-lg mb-8 max-w-md mx-auto animate-fade-up">
+      Pizzas napolitaines au feu de bois, à la part ou entières.
+      <br class="hidden sm:block" />
+      Sur place · À emporter · Livraison
+    </p>
+    <div class="flex flex-col sm:flex-row gap-3 justify-center max-w-md mx-auto animate-fade-up">
+      <a
+        href={`tel:${nap.phone}`}
+        class="btn-primary text-lg sm:flex-1"
+        data-plausible-event-name="click_cta_appeler_hero">
+        Commander maintenant
+      </a>
+      <a href="#menu" class="btn-secondary text-lg sm:flex-1">
+        Voir la carte
+      </a>
+    </div>
+    <p class="text-stone-400 text-xs mt-10 animate-bounce" aria-hidden="true">↓ Découvrir</p>
+  </div>
+</section>

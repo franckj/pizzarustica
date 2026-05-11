@@ -1,0 +1,86 @@
+---
+import Base from '@/layouts/Base.astro';
+import Header from '@/components/Header.astro';
+import Footer from '@/components/Footer.astro';
+import CTA from '@/components/CTA.astro';
+import PizzaCard from '@/components/PizzaCard.astro';
+import { pizzas, categories } from '@/data/menu';
+import { site } from '@/data/config';
+
+const title = `La carte – ${site.name} Paris 6ᵉ`;
+const description = "La carte complète des pizzas napolitaines de Pizza Rustica : Margherita, Bufala, Diavola, 4 Fromages, Rustica maison, et plus. Disponibles à la part ou entières.";
+---
+
+<Base title={title} description={description} canonical={`${site.url}/carte`}>
+  <Header />
+  <main id="main" class="pt-24">
+    <section class="section bg-stone-950">
+      <div class="container-page">
+        <div class="text-center mb-10">
+          <p class="text-amber-400 text-sm font-semibold tracking-widest uppercase mb-3">
+            Notre carte
+          </p>
+          <h1 class="text-4xl sm:text-5xl font-black font-display text-white mb-3">
+            La carte complète
+          </h1>
+          <p class="text-stone-400 max-w-xl mx-auto">
+            Toutes nos pizzas, classiques et créations maison.<br />
+            Disponibles à la part ou entières — sur place, à emporter, en livraison.
+          </p>
+        </div>
+
+        <div class="flex flex-wrap justify-center gap-2 mb-8" role="tablist" aria-label="Filtrer les pizzas">
+          {categories.map((cat) => (
+            <button
+              type="button"
+              class="filter-btn-page px-4 py-2 rounded-full text-sm font-semibold transition-colors
+                     bg-stone-800 text-stone-300 hover:bg-stone-700 hover:text-white
+                     data-[active=true]:bg-amber-500 data-[active=true]:text-stone-950"
+              data-category={cat.value}
+              data-active={cat.value === 'all' ? 'true' : 'false'}
+              role="tab"
+              aria-selected={cat.value === 'all' ? 'true' : 'false'}>
+              {cat.label}
+            </button>
+          ))}
+        </div>
+
+        <div id="pizza-grid-page" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          {pizzas.map((pizza) => <PizzaCard pizza={pizza} />)}
+        </div>
+
+        <div class="mt-12 bg-stone-900 border border-stone-800 rounded-2xl p-6 max-w-3xl mx-auto">
+          <h2 class="text-white font-bold mb-3">Allergènes</h2>
+          <p class="text-stone-400 text-sm leading-relaxed">
+            Conformément au règlement INCO, la liste des 14 allergènes est disponible sur place et sur demande.
+            En cas d'allergie ou d'intolérance, prévenez notre équipe avant la commande.
+            <br />
+            <span class="text-stone-500 text-xs">TODO : ajouter la matrice détaillée par pizza.</span>
+          </p>
+        </div>
+      </div>
+    </section>
+  </main>
+  <Footer />
+  <CTA />
+</Base>
+
+<script>
+  const buttons = document.querySelectorAll<HTMLButtonElement>('.filter-btn-page');
+  const cards = document.querySelectorAll<HTMLElement>('#pizza-grid-page > [data-category]');
+
+  buttons.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const target = btn.dataset.category;
+      buttons.forEach((b) => {
+        const active = b === btn;
+        b.dataset.active = String(active);
+        b.setAttribute('aria-selected', String(active));
+      });
+      cards.forEach((card) => {
+        const show = target === 'all' || card.dataset.category === target;
+        card.style.display = show ? '' : 'none';
+      });
+    });
+  });
+</script>

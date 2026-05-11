@@ -1,0 +1,70 @@
+---
+import { pizzas, categories } from '@/data/menu';
+import PizzaCard from './PizzaCard.astro';
+---
+
+<section id="menu" class="section bg-stone-900">
+  <div class="container-page">
+    <div class="text-center mb-10">
+      <p class="text-amber-400 text-sm font-semibold tracking-widest uppercase mb-3">
+        Notre carte
+      </p>
+      <h2 class="h-section mb-3">Les pizzas du moment</h2>
+      <p class="text-stone-400 max-w-xl mx-auto">
+        Prix indicatifs pour pizza entière (30 cm). Disponible également à la part.
+      </p>
+    </div>
+
+    <!-- Filtres -->
+    <div class="flex flex-wrap justify-center gap-2 mb-8" role="tablist" aria-label="Filtrer les pizzas">
+      {categories.map((cat) => (
+        <button
+          type="button"
+          class="filter-btn px-4 py-2 rounded-full text-sm font-semibold transition-colors
+                 bg-stone-800 text-stone-300 hover:bg-stone-700 hover:text-white
+                 data-[active=true]:bg-amber-500 data-[active=true]:text-stone-950"
+          data-category={cat.value}
+          data-active={cat.value === 'all' ? 'true' : 'false'}
+          data-plausible-event-name={cat.event}
+          role="tab"
+          aria-selected={cat.value === 'all' ? 'true' : 'false'}>
+          {cat.label}
+        </button>
+      ))}
+    </div>
+
+    <!-- Grille pizzas -->
+    <div id="pizza-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+      {pizzas.map((pizza) => <PizzaCard pizza={pizza} />)}
+    </div>
+
+    <!-- Lien carte complète -->
+    <div class="text-center mt-12">
+      <a href="/carte" class="btn-secondary">
+        Voir la carte complète →
+      </a>
+    </div>
+  </div>
+</section>
+
+<script>
+  const buttons = document.querySelectorAll<HTMLButtonElement>('.filter-btn');
+  const cards = document.querySelectorAll<HTMLElement>('#pizza-grid > [data-category]');
+
+  buttons.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const target = btn.dataset.category;
+
+      buttons.forEach((b) => {
+        const active = b === btn;
+        b.dataset.active = String(active);
+        b.setAttribute('aria-selected', String(active));
+      });
+
+      cards.forEach((card) => {
+        const show = target === 'all' || card.dataset.category === target;
+        card.style.display = show ? '' : 'none';
+      });
+    });
+  });
+</script>
