@@ -131,9 +131,19 @@ const restaurantSchema = {
     <!-- Plausible (privacy-first, CNIL-friendly, pas de cookie) -->
     <script
       is:inline
-      defer
-      data-domain="pizzarustica.fr"
-      src="https://plausible.io/js/script.tagged-events.js"></script>
+      async
+      src="https://plausible.io/js/pa-2-S-N76LbLa29EAnmGI_z.js"></script>
+    <script is:inline>
+      window.plausible =
+        window.plausible ||
+        function () {
+          (plausible.q = plausible.q || []).push(arguments);
+        };
+      plausible.init = plausible.init || function (i) {
+        plausible.o = i || {};
+      };
+      plausible.init();
+    </script>
 
     <slot name="head" />
   </head>
