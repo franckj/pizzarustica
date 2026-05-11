@@ -93,6 +93,43 @@ jobs:
             --commit-dirty=true \
             --commit-message="ci: PR #${{ github.event.pull_request.number }} (${BRANCH})"
 
+      - name: Remove conflicting DNS records on apex/www (production only)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          set -euo pipefail
+          ZONE_NAME="pizzarustica.fr"
+          AUTH=(-H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" -H "Content-Type: application/json")
+          BASE="https://api.cloudflare.com/client/v4"
+
+          zone_id=$(curl -sS "${AUTH[@]}" "$BASE/zones?name=$ZONE_NAME" \
+            | jq -r '.result[0].id // empty')
+          if [ -z "$zone_id" ]; then
+            echo "Zone $ZONE_NAME not reachable by this token — assuming external DNS, skipping cleanup."
+            exit 0
+          fi
+
+          deleted=0
+          for NAME in "$ZONE_NAME" "www.$ZONE_NAME"; do
+            for TYPE in A AAAA CNAME; do
+              ids=$(curl -sS "${AUTH[@]}" "$BASE/zones/$zone_id/dns_records?name=$NAME&type=$TYPE" \
+                | jq -r '.result[] | select((.content // "") | endswith(".pages.dev") | not) | .id')
+              for rid in $ids; do
+                echo "Deleting stray $TYPE record on $NAME (id=$rid)…"
+                code=$(curl -sS -o /tmp/del.json -w "%{http_code}" -X DELETE "${AUTH[@]}" \
+                  "$BASE/zones/$zone_id/dns_records/$rid")
+                if [ "$code" != "200" ]; then
+                  echo "Failed to delete record $rid (HTTP $code):"
+                  cat /tmp/del.json
+                  echo
+                  echo "Hint: token needs 'Zone · DNS · Edit' permission."
+                  exit 1
+                fi
+                deleted=$((deleted+1))
+              done
+            done
+          done
+          echo "✓ Cleaned $deleted stray record(s); Pages-managed CNAMEs (if any) left intact."
+
       - name: Attach custom domains (production only)
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
