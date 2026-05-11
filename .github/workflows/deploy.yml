@@ -44,13 +44,33 @@ jobs:
 
       - name: Ensure Cloudflare Pages project exists
         run: |
-          if npx wrangler pages project list 2>&1 | awk 'NR>2 {print $1}' | grep -qx "pizzarustica-fr"; then
-            echo "Project pizzarustica-fr already exists."
-          else
-            echo "Creating Cloudflare Pages project pizzarustica-fr…"
-            npx wrangler pages project create pizzarustica-fr \
-              --production-branch=main
+          set -euo pipefail
+          PROJECT="pizzarustica-fr"
+          API="https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/pages/projects"
+          AUTH=(-H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" -H "Content-Type: application/json")
+
+          status=$(curl -sS -o /tmp/project.json -w "%{http_code}" "${AUTH[@]}" "${API}/${PROJECT}")
+          if [ "$status" = "200" ]; then
+            echo "Project ${PROJECT} already exists."
+            exit 0
           fi
+          if [ "$status" != "404" ]; then
+            echo "Unexpected response (HTTP ${status}) checking project:"
+            cat /tmp/project.json
+            exit 1
+          fi
+
+          echo "Creating Cloudflare Pages project ${PROJECT}…"
+          create_status=$(curl -sS -o /tmp/create.json -w "%{http_code}" -X POST "${AUTH[@]}" "$API" \
+            --data "{\"name\":\"${PROJECT}\",\"production_branch\":\"main\"}")
+          if [ "$create_status" != "200" ] && [ "$create_status" != "201" ]; then
+            echo "Failed to create project (HTTP ${create_status}):"
+            cat /tmp/create.json
+            echo
+            echo "Hint: the CLOUDFLARE_API_TOKEN needs 'Account · Cloudflare Pages · Edit' permission to create projects."
+            exit 1
+          fi
+          echo "Project ${PROJECT} created."
 
       - name: Deploy to Cloudflare Pages (production)
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
