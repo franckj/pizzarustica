@@ -92,3 +92,32 @@ jobs:
             --branch="$SAFE_BRANCH" \
             --commit-dirty=true \
             --commit-message="ci: PR #${{ github.event.pull_request.number }} (${BRANCH})"
+
+      - name: Attach custom domains (production only)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          set -euo pipefail
+          PROJECT="pizzarustica-fr"
+          API="https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/pages/projects/${PROJECT}/domains"
+          AUTH=(-H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" -H "Content-Type: application/json")
+
+          curl -sS "${AUTH[@]}" "$API" > /tmp/domains.json
+          existing=$(grep -oE '"name":"[^"]+"' /tmp/domains.json | cut -d'"' -f4 || true)
+
+          for DOMAIN in www.pizzarustica.fr pizzarustica.fr; do
+            if echo "$existing" | grep -qx "$DOMAIN"; then
+              echo "✓ $DOMAIN already attached."
+              continue
+            fi
+            echo "Attaching $DOMAIN…"
+            code=$(curl -sS -o /tmp/attach.json -w "%{http_code}" -X POST "${AUTH[@]}" "$API" \
+              --data "{\"name\":\"$DOMAIN\"}")
+            if [ "$code" != "200" ] && [ "$code" != "201" ]; then
+              echo "✗ Failed for $DOMAIN (HTTP $code):"
+              cat /tmp/attach.json
+              echo
+              echo "Hint: token needs 'Account · Cloudflare Pages · Edit' AND the domain must be in a zone on this account."
+              exit 1
+            fi
+            echo "✓ $DOMAIN attached."
+          done
