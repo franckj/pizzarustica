@@ -1,0 +1,12 @@
+# Cloudflare Pages redirects
+# Doc: https://developers.cloudflare.com/pages/configuration/redirects/
+
+# Canonical: /carte (la carte). Le doublon historique /lacarte est redirige en 301.
+/lacarte           /carte   301
+/lacarte/          /carte   301
+/lacarte/*         /carte   301
+
+# HTTP -> HTTPS est applique cote Cloudflare via le parametre "Always Use HTTPS"
+# (Dashboard > SSL/TLS > Edge Certificates) ou via une Transform Rule equivalente.
+# Cette regle est conservee ici pour memoire et n'est pas effective dans _redirects,
+# car les requetes HTTP n'atteignent pas Pages si "Always Use HTTPS" est actif.
