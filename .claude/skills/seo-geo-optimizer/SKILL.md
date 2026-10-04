@@ -29,9 +29,10 @@ Never ask the user to paste keys into chat. If they're tired of per-surface setu
 ## 2. Baseline — where does the page stand?
 
 1. **Traffic by source** (Plausible, 28d and 12mo): visitors per `visit:source` for the page, and site-wide. Flag AI sources (ChatGPT, Perplexity, Claude, Gemini, Copilot, Bing Chat) vs search (Google, Bing, DuckDuckGo, Ecosia). Note when the page was first seen (`time:month`). Low numbers → say the trend is directional.
-2. **Indexing**: `site:domain.com/path/` on Google and on Bing via DataForSEO SERP. Not indexed anywhere is the #1 problem; content work comes after (see `references/geo.md` → "Indexing first").
+2. **Indexing**: `site:domain.com/path/` on Google and on Bing via DataForSEO SERP. Check `site:domain.com` too, to tell "page not indexed" from "domain not indexed". DataForSEO's Bing `site:` queries sometimes return error 40102 or junk; treat that as "probably not indexed, confirm in Bing Webmaster Tools", not as proof. Not indexed anywhere is the #1 problem; content work comes after (see `references/geo.md` → "Indexing first").
 3. **Rankings**: DataForSEO Labs ranked keywords for the URL/domain; Google + Bing SERP top 20 for the primary query — record our position or "not in top 20".
-4. **AI visibility**: run the primary query and 3–5 PAA-style variants through the ChatGPT scraper (and LLM-mentions search if available). Record: are we cited, which URLs are cited, what facts/structure the answer uses. That's what the model found quotable.
+4. **Authority**: `backlinks_summary` for the domain. Look at referring domains, spam score and the TLD mix. Hundreds of links from `.store/.space/.shop/.website` with a high spam score point to an expired domain's past or to negative SEO, a common reason a domain gets AI citations but no Google rankings. Recommend a disavow review.
+5. **AI visibility**: run the primary query and 3–5 PAA-style variants through the ChatGPT scraper (and LLM-mentions search if available). Record: are we cited, which URLs are cited, what facts/structure the answer uses. That's what the model found quotable. Citations vary from run to run: one "not cited" result doesn't contradict Plausible showing ChatGPT referrals. Report both.
 
 ## 3. Competitive gap
 
