@@ -59,7 +59,7 @@ If the site is in the session (repo), implement directly: content, title/meta, h
 
 ## 6. Deliverable
 
-Lead with the verdict, then evidence. Structure:
+Lead with the verdict, then evidence. Start the report (chat and any saved audit file) with a **data access notice**: which sources you actually reached (Plausible, DataForSEO, GSC, Bing Webmaster Tools, others) and which you didn't, and which findings are only estimates because of that. A Bing finding from DataForSEO's Bing results is an estimate, not proof: in a real audit it said a domain wasn't indexed when Bing Webmaster Tools showed it was. The reader must be able to tell measured facts from inferences at a glance. Structure:
 
 1. **Diagnosis** — 3–5 bullets: traffic by source, indexing status, ranking/citation status, the main reason it's not winning.
 2. **Priority actions** — ordered by impact ÷ effort, each tied to a data point. Technical/indexing fixes first.
