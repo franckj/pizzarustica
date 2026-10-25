@@ -5,7 +5,7 @@ import Footer from '@/components/Footer.astro';
 import { nap, site } from '@/data/config';
 
 const title = `Politique de confidentialité – ${site.name}`;
-const description = "Politique de confidentialité du site pizzarustica.fr — collecte de données, mesure d'audience Plausible, droits RGPD.";
+const description = "Politique de confidentialité du site pizzarustica.fr — collecte de données, mesure d'audience sans cookie, droits RGPD.";
 ---
 
 <Base title={title} description={description} canonical={`${site.url}/politique-confidentialite`} noindex>
@@ -28,21 +28,18 @@ const description = "Politique de confidentialité du site pizzarustica.fr — c
           traitées dans le cadre de votre demande, et conservées le temps nécessaire à son traitement.
         </p>
 
-        <h2>2. Mesure d'audience — Plausible Analytics</h2>
+        <h2>2. Mesure d'audience</h2>
         <p>
-          Pour mesurer la fréquentation du site, nous utilisons <strong>Plausible Analytics</strong>,
-          un outil de mesure d'audience respectueux de la vie privée :
+          Un petit compteur d'événements que nous hébergeons chez Cloudflare compte les pages vues
+          et quelques actions, comme les clics vers d'autres sites, sans cookies : il conserve
+          l'action, la page, le site d'où vous venez et votre pays, jamais votre adresse IP, et ne
+          permet pas de vous identifier.
         </p>
         <ul>
-          <li>Aucun cookie n'est déposé sur votre appareil.</li>
-          <li>Aucune donnée personnelle (IP complète, identifiant unique) n'est conservée.</li>
-          <li>Les données sont anonymisées et agrégées.</li>
-          <li>Le service est conforme RGPD, CCPA, et exempté du consentement par la CNIL.</li>
+          <li>Aucun cookie n'est déposé sur votre appareil, et rien n'y est stocké.</li>
+          <li>Aucune adresse IP ni aucun identifiant unique n'est conservé.</li>
+          <li>Chaque événement est enregistré sans lien avec une personne ; nous n'en lisons que des totaux.</li>
         </ul>
-        <p>
-          Données collectées : page visitée, source du trafic, type d'appareil, pays.
-          Plus d'informations sur <a href="https://plausible.io/data-policy" target="_blank" rel="noopener">plausible.io/data-policy</a>.
-        </p>
 
         <h2>3. Cookies</h2>
         <p>
