@@ -1,7 +1,7 @@
 # Pizza Rustica — pizzarustica.fr
 
 Landing page locale SEO pour **Pizza Rustica** (24 rue Saint-André des Arts, 75006 Paris).
-Stack : Astro 4 (static) · Tailwind CSS · TypeScript · Plausible · Cloudflare Pages.
+Stack : Astro 4 (static) · Tailwind CSS · TypeScript · compteur d'événements (e.franckj.com) · Cloudflare Pages.
 
 Trafic cible : **90 % mobile** — design mobile-first absolu.
 
@@ -89,13 +89,14 @@ Recherche `TODO` dans le repo pour la liste à jour. Points clés :
 - [ ] URL Uber Eats / Deliveroo réelles dans `src/data/config.ts`
 - [ ] 3 vrais avis clients dans `src/data/menu.ts`
 
-## Plausible
+## Mesure d'audience
 
-Script chargé pour le domaine `pizzarustica.fr`. Tous les CTA critiques
-sont instrumentés via `data-plausible-event-name`. Conformité CNIL : pas de cookie,
-pas de consentement requis.
+Depuis le 2026-10-25, notre compteur d'événements sans cookie (https://e.franckj.com/s.js avec
+`data-pageviews="always"`, ops events/README.md) remplace Plausible : il compte les pages vues et
+les clics sortants. Les attributs `data-plausible-event-name` ne sont lus ni par lui ni, avant lui,
+par Plausible (aucun de ces événements enregistré d'août à octobre 2026).
 
-Liste des events trackés (voir composants) :
+Événements prévus dans les composants :
 - `click_cta_appeler_hero` · `click_cta_appeler_header` · `click_cta_appeler_mobile_menu`
 - `click_cta_appeler_sticky` · `click_cta_appeler_location`
 - `click_cta_ubereats_sticky`

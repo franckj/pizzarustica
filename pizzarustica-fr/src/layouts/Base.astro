@@ -122,28 +122,13 @@ const restaurantSchema = {
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/manifest.webmanifest" />
 
-    <!-- Preconnect Plausible (perf) -->
-    <link rel="preconnect" href="https://plausible.io" crossorigin />
-
     <!-- Schema.org Restaurant JSON-LD -->
     <script type="application/ld+json" set:html={JSON.stringify(restaurantSchema)} />
 
-    <!-- Plausible (privacy-first, CNIL-friendly, pas de cookie) -->
-    <script
-      is:inline
-      async
-      src="https://plausible.io/js/pa-2-S-N76LbLa29EAnmGI_z.js"></script>
-    <script is:inline>
-      window.plausible =
-        window.plausible ||
-        function () {
-          (plausible.q = plausible.q || []).push(arguments);
-        };
-      plausible.init = plausible.init || function (i) {
-        plausible.o = i || {};
-      };
-      plausible.init();
-    </script>
+    {/* Notre compteur d'événements sans cookie (ops events/README.md). Il compte aussi les pages vues
+        (data-pageviews="always") : ce site n'a pas Cloudflare Web Analytics. */}
+    <script is:inline>window.plausible=window.plausible||function(){(plausible.q=plausible.q||[]).push(arguments)};window.events=window.events||function(){(events.q=events.q||[]).push(arguments)};</script>
+    <script is:inline defer data-no-forms data-pageviews="always" src="https://e.franckj.com/s.js"></script>
 
     <slot name="head" />
   </head>
