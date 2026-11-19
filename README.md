@@ -1,1 +1,4 @@
 # pizzarustica
+## Suggestion, 2026-11-19 (morning supervisor, for Franck; nothing changed on the site)
+
+Search Console (sc-domain:pizzarustica.fr, 2026-10-20 to 2026-11-17, read 2026-11-19): 4,173 impressions, 54 clicks; the homepage has 51 of the clicks ("pizza rustica paris": 11 clicks, position 1.3). The old menu address `http://pizzarustica.fr/lacarte/` still gets 439 impressions (position 4.1), against 44 for the real menu page `/carte/`. Checked with curl today, the old address takes 3 redirects to reach the menu: `http://…/lacarte/` → `https://…/lacarte/` → `/carte` → `/carte/`. Suggestion: in `pizzarustica-fr/public/_redirects`, point the three `/lacarte` lines to `/carte/` (with the slash) to drop one redirect, so Google moves its impressions to `/carte/` sooner. Research cost: $0.
